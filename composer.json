@@ -1,0 +1,14 @@
+{
+  "name": "drupal/entityqueue_taxonomy",
+  "type": "drupal-module",
+  "description": "Entityqueue Taxonomy -- smart queues for taxonomy terms",
+  "keywords": ["Drupal"],
+  "license": "GPL-2.0+",
+  "homepage": "https://www.drupal.org/project/entityqueue_taxonomy",
+  "minimum-stability": "dev",
+  "support": {
+    "issues": "https://www.drupal.org/project/issues/entityqueue_taxonomy",
+    "source": "http://cgit.drupalcode.org/entityqueue_taxonomy"
+  },
+  "require": { }
+}

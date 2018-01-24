@@ -1,0 +1,49 @@
+<?php
+
+/**
+ * @file
+ * Contains entityqueue_taxonomy.module.
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\entityqueue\Entity\EntityQueue;
+use Drupal\entityqueue\Entity\EntitySubqueue;
+
+/**
+ * Implements hook_help().
+ */
+function entityqueue_taxonomy_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    // Main module help for the entityqueue_taxonomy module.
+    case 'help.page.entityqueue_taxonomy':
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('Entityqueue Taxonomy -- smart queues for taxonomy terms') . '</p>';
+      return $output;
+
+    default:
+  }
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_insert.
+ */
+function entityqueue_taxonomy_term_insert(\Drupal\taxonomy\TermInterface $term) {
+  /** @var EntityQueue $entityqueues */
+  $entityqueues = EntityQueue::loadMultiple();
+  foreach ($entityqueues as $id => $entityqueue) {
+    if ($entityqueue->getHandler() === 'taxonomy_term') {
+      /** @var \Drupal\entityqueue_taxonomy\Plugin\EntityQueueHandler\Taxonomy $plugin */
+      $plugin = $entityqueue->getHandlerPlugin();
+      if ($plugin->getConfiguration()['vocabulary'] == $term->bundle()) {
+        $subqueue = EntitySubqueue::create([
+          'queue' => $entityqueue->id(),
+          'name' => $entityqueue->id() . '_' . $term->id(),
+          'title' => $term->label(),
+          'langcode' => $entityqueue->language()->getId(),
+        ]);
+        $subqueue->save();
+      }
+    }
+  }
+}
