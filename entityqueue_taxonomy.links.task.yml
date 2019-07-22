@@ -1,0 +1,5 @@
+entity.taxonomy_term.entityqueue_taxonomy:
+  route_name: entity.taxonomy_term.entityqueue_taxonomy
+  title: 'Entity queue'
+  base_route: entity.taxonomy_term.canonical
+  weight: 10

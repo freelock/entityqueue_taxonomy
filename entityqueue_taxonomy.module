@@ -5,9 +5,14 @@
  * Contains entityqueue_taxonomy.module.
  */
 
+use Drupal\Component\Utility\Crypt;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\Site\Settings;
 use Drupal\entityqueue\Entity\EntityQueue;
 use Drupal\entityqueue\Entity\EntitySubqueue;
+use Drupal\taxonomy\TermInterface;
+use Drupal\Core\Entity\EntityTypeInterface;
 
 /**
  * Implements hook_help().
@@ -18,7 +23,7 @@ function entityqueue_taxonomy_help($route_name, RouteMatchInterface $route_match
     case 'help.page.entityqueue_taxonomy':
       $output = '';
       $output .= '<h3>' . t('About') . '</h3>';
-      $output .= '<p>' . t('Entityqueue Taxonomy -- smart queues for taxonomy terms') . '</p>';
+      $output .= '<p>' . t('Creates entity queue for a taxonomy term.') . '</p>';
       return $output;
 
     default:
@@ -26,10 +31,10 @@ function entityqueue_taxonomy_help($route_name, RouteMatchInterface $route_match
 }
 
 /**
- * Implements hook_ENTITY_TYPE_insert.
+ * Implements hook_ENTITY_TYPE_insert().
  */
-function entityqueue_taxonomy_term_insert(\Drupal\taxonomy\TermInterface $term) {
-  /** @var EntityQueue $entityqueues */
+function entityqueue_taxonomy_term_insert(TermInterface $term) {
+  /** @var \Drupal\entityqueue\Entity\EntityQueue[] $entityqueues */
   $entityqueues = EntityQueue::loadMultiple();
   foreach ($entityqueues as $id => $entityqueue) {
     if ($entityqueue->getHandler() === 'taxonomy_term') {
@@ -46,4 +51,61 @@ function entityqueue_taxonomy_term_insert(\Drupal\taxonomy\TermInterface $term) 
       }
     }
   }
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function entityqueue_taxonomy_form_alter(&$form, &$form_state, $form_id) {
+  if (preg_match('/entity_subqueue_(.*)_edit_form/i', $form_id, $matches)) {
+    $entityqueue_id = $matches[1];
+    $entityqueue = EntityQueue::load($entityqueue_id);
+    $subqueue_id = $form['name']['#default_value'];
+
+    $element = &$form['items']['widget']['add_more']['new_item']['target_id'];
+
+    $info = \Drupal::service('element_info')->getInfo($element['#type']);
+    // Overlay $info onto $element, retaining preexisting keys in $element.
+    $element += $info;
+
+    // Add vocabulary and taxonomy term ID to element to process.
+    preg_match("/{$entityqueue_id}_(\d+)/i", $subqueue_id, $matches);
+    $element['#taxonomy_term'] = $matches[1];
+    $element['#vocabulary'] = $entityqueue->getHandlerConfiguration()['vocabulary'];
+
+    // Add processing to alter autocomplete route.
+    $entity_autocomplete_process = $element['#process'][0];
+    $element['#process'][0] = 'entityqueue_taxonomy_entity_autocomplete_process';
+    array_unshift($element['#process'], $entity_autocomplete_process);
+  }
+}
+
+/**
+ * Entityqueue Taxonomy autocomplete element process to alter callback route
+ * and provide vocabulary and taxonomy term ID.
+ */
+function entityqueue_taxonomy_entity_autocomplete_process(array &$element) {
+  $element['#selection_handler'] = str_replace('default', 'entityqueue_taxonomy', $element['#selection_handler']);
+
+  // Store the selection settings in the key/value store and pass a hashed key
+  // in the route parameters.
+  $selection_settings = isset($element['#selection_settings']) ? $element['#selection_settings'] : [];
+  $data = serialize($selection_settings) . $element['#target_type'] . $element['#selection_handler'] . $element['#vocabulary'] . $element['#taxonomy_term'];
+  $selection_settings_key = Crypt::hmacBase64($data, Settings::getHashSalt());
+
+  $key_value_storage = \Drupal::keyValue('entity_autocomplete');
+  if (!$key_value_storage->has($selection_settings_key)) {
+    $key_value_storage->set($selection_settings_key, $selection_settings);
+  }
+
+  $element['#autocomplete_route_name'] = 'entityqueue_taxonomy.entity_autocomplete';
+  $element['#autocomplete_route_parameters'] = [
+    'target_type' => $element['#target_type'],
+    'selection_handler' => $element['#selection_handler'],
+    'vocabulary' => $element['#vocabulary'],
+    'taxonomy_term' => $element['#taxonomy_term'],
+    'selection_settings_key' => $selection_settings_key,
+  ];
+
+  return $element;
 }

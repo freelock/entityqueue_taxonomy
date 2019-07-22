@@ -1,0 +1,21 @@
+entity.taxonomy_term.entityqueue_taxonomy:
+  path: '/taxonomy/term/{taxonomy_term}/entityqueue-taxonomy'
+  defaults:
+    _controller: '\Drupal\entityqueue_taxonomy\Controller\EntityQueueTaxonomyUIController::taxonomyTermSubqueues'
+    entity_type_id: taxonomy_term
+    _title: 'Taxonomy entity queue'
+  options:
+    _admin_route: TRUE
+    parameters:
+      taxonomy_term:
+        type: entity:taxonomy_term
+  requirements:
+    _custom_access: '\Drupal\entityqueue_taxonomy\Controller\EntityQueueTaxonomyUIController::access'
+    taxonomy_term: \d+
+
+entityqueue_taxonomy.entity_autocomplete:
+  path: '/entityqueue_taxonomy_autocomplete/{target_type}/{selection_handler}/{vocabulary}/{taxonomy_term}/{selection_settings_key}'
+  defaults:
+    _controller: '\Drupal\entityqueue_taxonomy\Controller\EntityQueueTaxonomyAutocompleteController::handleAutocomplete'
+  requirements:
+    _access: 'TRUE'

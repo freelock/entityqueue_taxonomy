@@ -1,0 +1,4 @@
+services:
+  entityqueue_taxonomy.autocomplete_matcher:
+    class: Drupal\entityqueue_taxonomy\EntityQueueTaxonomyAutocompleteMatcher
+    arguments: ['@plugin.manager.entity_reference_selection']

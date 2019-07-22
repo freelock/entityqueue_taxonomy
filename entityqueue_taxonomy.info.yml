@@ -1,7 +1,7 @@
-name: entityqueue_taxonomy
+name: Entityqueue Taxonomy
 type: module
-description: Entityqueue Taxonomy -- smart queues for taxonomy terms
+description: Creates entity queue for a taxonomy term.
 core: 8.x
-package: entityqueue
+package: Entityqueue
 dependencies:
   - entityqueue
