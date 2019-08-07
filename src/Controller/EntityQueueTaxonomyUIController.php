@@ -54,23 +54,29 @@ class EntityQueueTaxonomyUIController extends ControllerBase {
     $destination = Url::fromRoute("entity.taxonomy_term.entityqueue_taxonomy", ['taxonomy_term' => $taxonomy_term->id()])->toString();
 
     foreach ($queues as $queue) {
+      /** @var \Drupal\entityqueue\EntitySubqueueInterface $subqueue */
       if ($subqueue = $storage->load($queue->id() . '_' . $taxonomy_term->id())) {
-        $title = $this->t('Edit subqueue items');
-        $url = $subqueue->toUrl('edit-form', ['query' => ['destination' => $destination]]);
         $operations = [
           'data' => [
             '#type' => 'operations',
             '#links' => [
               'edit' => [
-                'title' => $title,
-                'url' => $url,
+                'title' => $this->t('Edit subqueue items'),
+                'url' => $subqueue->toUrl('edit-form', ['query' => ['destination' => $destination]]),
               ],
             ],
           ],
         ];
+
+        if ($subqueue->isTranslatable()) {
+          $operations['data']['#links']['translate'] = [
+            'title' => $this->t('Translate'),
+            'url' => $subqueue->toUrl('drupal:content-translation-overview', ['query' => ['destination' => $destination]]),
+          ];
+        }
       }
       else {
-        $operations = $this->t('N/A');
+        continue;
       }
 
       $rows[] = [
