@@ -6,7 +6,6 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\entityqueue\Entity\EntityQueue;
 use Drupal\taxonomy\Plugin\views\argument_default\Tid;
 
-
 /**
  * @ViewsArgumentDefault(
  *  id = "entityqueue_name_term",
@@ -15,6 +14,9 @@ use Drupal\taxonomy\Plugin\views\argument_default\Tid;
  */
 class QueueNameTerm extends Tid {
 
+  /**
+   * @inheritdoc
+   */
   public function buildOptionsForm(&$form, FormStateInterface $form_state) {
     parent::buildOptionsForm($form, $form_state);
     // We cannot handle multiple terms...
@@ -36,19 +38,26 @@ class QueueNameTerm extends Tid {
     ];
   }
 
+  /**
+   * @inheritdoc
+   */
   public function defineOptions() {
     $options = parent::defineOptions();
-    // don't need anyall
-    unset ($options['anyall']);
-    // do need queue name
-    $options['entityqueue'] = ['default' => null];
+    // Don't need anyall.
+    unset($options['anyall']);
+    // Do need queue name.
+    $options['entityqueue'] = ['default' => NULL];
 
     return $options;
   }
 
+  /**
+   * @inheritdoc
+   */
   public function getArgument() {
     $tid = parent::getArgument();
     $queue = $this->options['entityqueue'];
     return $queue . '_' . $tid;
   }
+
 }

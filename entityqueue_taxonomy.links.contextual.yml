@@ -1,0 +1,5 @@
+entity.taxonomy_term.entityqueue_taxonomy:
+  title: 'Entity queue'
+  group: taxonomy_term
+  route_name: entity.taxonomy_term.entityqueue_taxonomy
+  weight: 10
