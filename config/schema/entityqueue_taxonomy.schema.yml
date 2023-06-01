@@ -1,7 +1,0 @@
-entityqueue.entity_queue.plugin.entityqueue_taxonomy:
-  type: mapping
-  mapping:
-    vocabulary:
-      type: string
-      label: Vocabulary
-
